@@ -25,7 +25,7 @@ export interface ForcedStartState {
  * Initiate forced start protocol for a task
  * Locks user into countdown period
  */
-export function initiateFor cedStart(
+export function initiateForcedStart(
   task: Task,
   userId: string,
   countdownMinutes: number = DEFAULT_COUNTDOWN_MINUTES

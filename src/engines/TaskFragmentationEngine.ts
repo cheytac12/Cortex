@@ -23,7 +23,7 @@ interface FragmentationStrategy {
  */
 function calculateFragmentationStrategy(
   durationMinutes: number,
-  taskTitle: string
+  _taskTitle: string
 ): FragmentationStrategy {
   if (durationMinutes <= MAX_TASK_DURATION_MINUTES) {
     return {

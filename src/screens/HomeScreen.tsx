@@ -9,14 +9,12 @@
  * Design principle: One decision per screen - reduce cognitive load
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useStore, selectActiveTasks } from '../store/appStore';
-import { Button, Card, SectionHeader, EmptyState, StatusBadge } from '../components/UI';
+import { Button, Card, EmptyState, StatusBadge } from '../components/UI';
 import { theme } from '../styles/theme';
-import { getCurrentBlock, getBlockByType } from '../engines/TimeSkeletonEngine';
 import { DailyBlockType } from '../types/models';
-import { format } from 'date-fns';
 
 interface HomeScreenProps {
   onStartTask: (taskId: string) => void;
@@ -27,7 +25,6 @@ interface HomeScreenProps {
 export function HomeScreen({ onStartTask, onAddTask, onViewReview }: HomeScreenProps) {
   const {
     currentBlock,
-    currentTask,
     todaysTasks,
     currentUser,
     isInForcedStartMode,

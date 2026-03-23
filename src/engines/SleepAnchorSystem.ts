@@ -8,12 +8,10 @@
  * Solution: Track sleep patterns and adapt workload accordingly
  */
 
-import { SleepLog, DailyMetrics } from '../types/models';
-import { differenceInMinutes, parse, parseISO, format } from 'date-fns';
+import { SleepLog } from '../types/models';
+import { differenceInMinutes, parse } from 'date-fns';
 
-const TARGET_SLEEP_HOURS = 8;
 const MAX_ACCEPTABLE_DEVIATION_MINUTES = 60;
-const SLEEP_QUALITY_THRESHOLD_GOOD = 4; // Out of 5
 
 export interface SleepImpactAssessment {
   deviationMinutes: number;

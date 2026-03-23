@@ -153,3 +153,80 @@ export interface UrgencyCalculation {
     currentBlockCompatibility: number;
   };
 }
+
+// ─── Behavioral Analysis Engine ───────────────────────────────────────────
+
+export interface SessionRecord {
+  sessionId: string;
+  taskId: string;
+  taskTitle: string;
+  userId: string;
+  date: string; // yyyy-MM-dd
+  hourOfDay: number; // 0–23
+  startDelay_minutes: number; // time from initiation to actual start
+  durationActual_minutes: number; // how long the session actually ran
+  completed: boolean;
+  interrupted: boolean;
+  sleepQuality?: number; // 1-5 from sleep log
+}
+
+export interface BehavioralMetrics {
+  userId: string;
+  computedAt: string; // ISO datetime
+  // Derived metrics
+  avgInitiationLatency_minutes: number;
+  initiationLatencyTrend: 'IMPROVING' | 'STABLE' | 'WORSENING';
+  completionRate_percent: number;
+  // Failure clusters: hour-of-day → count
+  failureByHour: Record<number, number>;
+  optimalFocusWindow: { startHour: number; endHour: number } | null;
+  // Simple cognitive fatigue: does completion rate drop after a certain hour?
+  cognitiveFatigueHour: number | null;
+}
+
+export enum FailurePatternType {
+  AVOIDANCE = 'AVOIDANCE',
+  TIME_OF_DAY_INEFFICIENCY = 'TIME_OF_DAY_INEFFICIENCY',
+  OVERLOAD_FAILURE = 'OVERLOAD_FAILURE',
+  SLEEP_PERFORMANCE_CORRELATION = 'SLEEP_PERFORMANCE_CORRELATION',
+}
+
+export interface FailurePattern {
+  type: FailurePatternType;
+  description: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  supportingData: Record<string, unknown>;
+}
+
+// ─── AI Insight Engine ────────────────────────────────────────────────────
+
+export enum InsightType {
+  PERFORMANCE = 'PERFORMANCE',         // When user performs best
+  FAILURE_DIAGNOSIS = 'FAILURE_DIAGNOSIS', // Why tasks failed
+  BEHAVIORAL_RECOMMENDATION = 'BEHAVIORAL_RECOMMENDATION', // What to change
+  ADAPTIVE_STRATEGY = 'ADAPTIVE_STRATEGY', // Concrete structural changes
+}
+
+export interface Insight {
+  id: string;
+  userId: string;
+  type: InsightType;
+  generatedAt: string; // ISO datetime
+  period: 'DAILY' | 'WEEKLY';
+  title: string;
+  body: string; // Specific, medically-grounded explanation
+  actionItems: string[]; // Concrete steps user can take
+  relatedPattern?: FailurePatternType;
+}
+
+// ─── Micro Reward ─────────────────────────────────────────────────────────
+
+export interface RewardEvent {
+  id: string;
+  userId: string;
+  taskId: string;
+  taskTitle: string;
+  awardedAt: string; // ISO datetime
+  streakCount: number; // consecutive completions
+  message: string;
+}

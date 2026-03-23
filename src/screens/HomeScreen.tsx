@@ -21,9 +21,10 @@ interface HomeScreenProps {
   onStartWorkBlock: () => void;
   onAddTask: () => void;
   onViewReview: () => void;
+  onViewInsights: () => void;
 }
 
-export function HomeScreen({ onStartTask, onStartWorkBlock, onAddTask, onViewReview }: HomeScreenProps) {
+export function HomeScreen({ onStartTask, onStartWorkBlock, onAddTask, onViewReview, onViewInsights }: HomeScreenProps) {
   const {
     currentBlock,
     todaysTasks,
@@ -186,6 +187,12 @@ export function HomeScreen({ onStartTask, onStartWorkBlock, onAddTask, onViewRev
             fullWidth
           />
         )}
+        <Button
+          title="INSIGHTS"
+          onPress={onViewInsights}
+          variant="secondary"
+          fullWidth
+        />
       </View>
     </View>
   );

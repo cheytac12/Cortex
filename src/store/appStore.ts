@@ -11,6 +11,7 @@ import {
   DailyBlock,
   DailyMetrics,
   AppState,
+  SessionRecord,
 } from '../types/models';
 import { ForcedStartState } from '../engines/ForcedStartEngine';
 
@@ -19,6 +20,8 @@ interface CortexStore extends AppState {
   forcedStartState: ForcedStartState | null;
   isLoading: boolean;
   error: string | null;
+  sessionHistory: SessionRecord[];
+  completionStreak: number;
 
   // Actions
   setCurrentUser: (user: User | null) => void;
@@ -32,6 +35,8 @@ interface CortexStore extends AppState {
   setIsInLockedFocusMode: (isIn: boolean) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  addSessionRecord: (record: SessionRecord) => void;
+  setCompletionStreak: (streak: number) => void;
 
   // Computed actions
   addTask: (task: Task) => void;
@@ -53,6 +58,8 @@ const initialState = {
   isInLockedFocusMode: false,
   isLoading: false,
   error: null,
+  sessionHistory: [] as SessionRecord[],
+  completionStreak: 0,
 };
 
 export const useStore = create<CortexStore>((set) => ({
@@ -79,6 +86,11 @@ export const useStore = create<CortexStore>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
 
   setError: (error) => set({ error }),
+
+  addSessionRecord: (record) =>
+    set((state) => ({ sessionHistory: [...state.sessionHistory, record] })),
+
+  setCompletionStreak: (streak) => set({ completionStreak: streak }),
 
   addTask: (task) =>
     set((state) => ({ todaysTasks: [...state.todaysTasks, task] })),

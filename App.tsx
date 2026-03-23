@@ -15,6 +15,7 @@ import { TaskEntryScreen } from '@/screens/TaskEntryScreen';
 import { ForcedStartScreen } from '@/screens/ForcedStartScreen';
 import { FocusScreen } from '@/screens/FocusScreen';
 import { ReviewScreen } from '@/screens/ReviewScreen';
+import { InsightsScreen } from '@/screens/InsightsScreen';
 
 import { useStore } from '@/store/appStore';
 import { theme } from '@/styles/theme';
@@ -33,8 +34,9 @@ import {
   getCurrentBlock,
 } from '@/engines/TimeSkeletonEngine';
 
+import { createRewardEvent, updateStreak, isMilestoneStreak } from '@/engines/MicroRewardEngine';
 
-import { Task, TaskStatus, SessionStatus, DailyBlock, DailyBlockType } from '@/types/models';
+import { Task, TaskStatus, SessionStatus, DailyBlock, DailyBlockType, SessionRecord } from '@/types/models';
 import { format, startOfDay, addMinutes } from 'date-fns';
 
 const Stack = createNativeStackNavigator();
@@ -58,6 +60,9 @@ export default function App() {
     setIsInLockedFocusMode,
     addTask,
     updateTask,
+    addSessionRecord,
+    completionStreak,
+    setCompletionStreak,
   } = useStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -265,25 +270,78 @@ export default function App() {
   };
 
   /**
+   * Build a SessionRecord for the behavioral analysis engine
+   */
+  const buildSessionRecord = (
+    task: Task,
+    session: { start_initiated_at?: string; start_actual_at?: string; end_at?: string },
+    completed: boolean,
+    sleepQuality?: number
+  ): SessionRecord => {
+    const now = new Date();
+    const startInitiated = session.start_initiated_at ? new Date(session.start_initiated_at) : now;
+    const startActual = session.start_actual_at ? new Date(session.start_actual_at) : now;
+    const end = session.end_at ? new Date(session.end_at) : now;
+
+    const startDelay = Math.max(0, Math.round((startActual.getTime() - startInitiated.getTime()) / 60000));
+    const durationActual = Math.max(0, Math.round((end.getTime() - startActual.getTime()) / 60000));
+
+    return {
+      sessionId: `sr-${Date.now()}`,
+      taskId: task.id,
+      taskTitle: task.title,
+      userId: currentUser?.id ?? 'demo-user',
+      date: format(now, 'yyyy-MM-dd'),
+      hourOfDay: now.getHours(),
+      startDelay_minutes: startDelay,
+      durationActual_minutes: durationActual,
+      completed,
+      interrupted: false,
+      sleepQuality,
+    };
+  };
+
+  /**
    * Handle focus session completion
    */
   const handleFocusComplete = () => {
     if (!currentTask || !currentSession) return;
 
-    // Mark task and session as completed
-    updateTask(currentTask.id, { status: TaskStatus.COMPLETED });
-    setCurrentSession({
+    const endTime = new Date().toISOString();
+    const updatedSession = {
       ...currentSession,
       status: SessionStatus.COMPLETED,
-      end_at: new Date().toISOString(),
+      end_at: endTime,
       completion_percentage: 100,
-    });
+    };
+
+    // Mark task and session as completed
+    updateTask(currentTask.id, { status: TaskStatus.COMPLETED });
+    setCurrentSession(updatedSession);
+
+    // Record session for behavioral analysis
+    const record = buildSessionRecord(currentTask, updatedSession, true);
+    addSessionRecord(record);
+
+    // Micro-reward: update streak and show contextual message
+    const newStreak = updateStreak(completionStreak, true);
+    setCompletionStreak(newStreak);
+    const reward = createRewardEvent(
+      currentUser?.id ?? 'demo-user',
+      currentTask.id,
+      currentTask.title,
+      newStreak
+    );
 
     setIsInLockedFocusMode(false);
     setCurrentTask(null);
     setCurrentSession(null);
 
-    Alert.alert('Task Completed', 'Great work! Task marked as complete.');
+    const rewardSuffix = isMilestoneStreak(newStreak)
+      ? `\n\n🎯 ${reward.message}`
+      : `\n${reward.message}`;
+
+    Alert.alert('Task Completed', `Great work!${rewardSuffix}`);
   };
 
   /**
@@ -292,13 +350,23 @@ export default function App() {
   const handleFocusFail = (reason: string) => {
     if (!currentTask || !currentSession) return;
 
-    updateTask(currentTask.id, { status: TaskStatus.FAILED });
-    setCurrentSession({
+    const endTime = new Date().toISOString();
+    const updatedSession = {
       ...currentSession,
       status: SessionStatus.FAILED,
-      end_at: new Date().toISOString(),
+      end_at: endTime,
       failure_reason: reason,
-    });
+    };
+
+    updateTask(currentTask.id, { status: TaskStatus.FAILED });
+    setCurrentSession(updatedSession);
+
+    // Record session for behavioral analysis
+    const record = buildSessionRecord(currentTask, updatedSession, false);
+    addSessionRecord(record);
+
+    // Streak resets on failure
+    setCompletionStreak(updateStreak(completionStreak, false));
 
     setIsInLockedFocusMode(false);
     setCurrentTask(null);
@@ -313,13 +381,23 @@ export default function App() {
   const handleFocusAbandon = () => {
     if (!currentTask || !currentSession) return;
 
-    updateTask(currentTask.id, { status: TaskStatus.FAILED });
-    setCurrentSession({
+    const endTime = new Date().toISOString();
+    const updatedSession = {
       ...currentSession,
       status: SessionStatus.ABANDONED,
-      end_at: new Date().toISOString(),
+      end_at: endTime,
       failure_reason: 'Session abandoned - app backgrounded',
-    });
+    };
+
+    updateTask(currentTask.id, { status: TaskStatus.FAILED });
+    setCurrentSession(updatedSession);
+
+    // Record session for behavioral analysis
+    const record = buildSessionRecord(currentTask, updatedSession, false);
+    addSessionRecord(record);
+
+    // Streak resets on abandon
+    setCompletionStreak(updateStreak(completionStreak, false));
 
     setIsInLockedFocusMode(false);
     setCurrentTask(null);
@@ -375,6 +453,7 @@ export default function App() {
                 onStartWorkBlock={handleStartWorkBlock}
                 onAddTask={() => props.navigation.navigate('TaskEntry')}
                 onViewReview={() => props.navigation.navigate('Review')}
+                onViewInsights={() => props.navigation.navigate('Insights')}
               />
             )}
           </Stack.Screen>
@@ -401,6 +480,18 @@ export default function App() {
           >
             {(props) => (
               <ReviewScreen
+                {...props}
+                onClose={() => props.navigation.goBack()}
+              />
+            )}
+          </Stack.Screen>
+
+          <Stack.Screen
+            name="Insights"
+            options={{ title: 'Insights' }}
+          >
+            {(props) => (
+              <InsightsScreen
                 {...props}
                 onClose={() => props.navigation.goBack()}
               />

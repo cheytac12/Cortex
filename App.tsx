@@ -10,15 +10,15 @@ import { View, StyleSheet, StatusBar, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { HomeScreen } from './screens/HomeScreen';
-import { TaskEntryScreen } from './screens/TaskEntryScreen';
-import { ForcedStartScreen } from './screens/ForcedStartScreen';
-import { FocusScreen } from './screens/FocusScreen';
-import { ReviewScreen } from './screens/ReviewScreen';
+import { HomeScreen } from '@/screens/HomeScreen';
+import { TaskEntryScreen } from '@/screens/TaskEntryScreen';
+import { ForcedStartScreen } from '@/screens/ForcedStartScreen';
+import { FocusScreen } from '@/screens/FocusScreen';
+import { ReviewScreen } from '@/screens/ReviewScreen';
 
-import { useStore } from './store/appStore';
-import { theme } from './styles/theme';
-import { supabase } from './lib/supabase';
+import { useStore } from '@/store/appStore';
+import { theme } from '@/styles/theme';
+import { supabase } from '@/lib/supabase';
 
 import {
   initiateForcedStart,
@@ -26,15 +26,15 @@ import {
   failSession,
   handleCountdownExpired,
   isCountdownExpired,
-} from './engines/ForcedStartEngine';
+} from '@/engines/ForcedStartEngine';
 
 import {
   generateDefaultDailyBlocks,
   getCurrentBlock,
-} from './engines/TimeSkeletonEngine';
+} from '@/engines/TimeSkeletonEngine';
 
 
-import { Task, TaskStatus, SessionStatus, DailyBlock } from './types/models';
+import { Task, TaskStatus, SessionStatus, DailyBlock } from '@/types/models';
 import { format, startOfDay } from 'date-fns';
 
 const Stack = createNativeStackNavigator();

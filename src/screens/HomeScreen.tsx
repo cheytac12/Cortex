@@ -18,11 +18,12 @@ import { DailyBlockType } from '../types/models';
 
 interface HomeScreenProps {
   onStartTask: (taskId: string) => void;
+  onStartWorkBlock: () => void;
   onAddTask: () => void;
   onViewReview: () => void;
 }
 
-export function HomeScreen({ onStartTask, onAddTask, onViewReview }: HomeScreenProps) {
+export function HomeScreen({ onStartTask, onStartWorkBlock, onAddTask, onViewReview }: HomeScreenProps) {
   const {
     currentBlock,
     todaysTasks,
@@ -59,78 +60,86 @@ export function HomeScreen({ onStartTask, onAddTask, onViewReview }: HomeScreenP
           <Text style={styles.blockLabel}>CURRENT BLOCK</Text>
           <Text style={styles.blockName}>{blockDisplay}</Text>
           {blockTime && <Text style={styles.blockTime}>{blockTime}</Text>}
-          {!isWorkBlock && (
-            <Text style={styles.blockMessage}>
-              Tasks can only be started during work blocks
-            </Text>
-          )}
         </Card>
 
-        {/* Current Task Display */}
-        {isWorkBlock && (
-          <>
-            {nextTask ? (
-              <Card style={styles.taskCard}>
-                <View style={styles.taskHeader}>
-                  <Text style={styles.taskLabel}>NEXT TASK</Text>
-                  <StatusBadge status={nextTask.status} small />
-                </View>
+        {/* Primary Action — always available */}
+        {!isWorkBlock ? (
+          /* Outside work block: offer to start one */
+          <Card style={styles.ctaCard}>
+            <Text style={styles.ctaTitle}>Ready to work?</Text>
+            <Text style={styles.ctaSubtitle}>
+              Start a 3-hour work block to begin tackling your tasks.
+            </Text>
+            <View style={styles.actionSection}>
+              <Button
+                title="START WORK BLOCK"
+                onPress={onStartWorkBlock}
+                fullWidth
+                disabled={isInForcedStartMode || isInLockedFocusMode}
+              />
+            </View>
+          </Card>
+        ) : nextTask ? (
+          /* In work block with a task queued */
+          <Card style={styles.taskCard}>
+            <View style={styles.taskHeader}>
+              <Text style={styles.taskLabel}>NEXT TASK</Text>
+              <StatusBadge status={nextTask.status} small />
+            </View>
 
-                <Text style={styles.taskTitle}>{nextTask.title}</Text>
+            <Text style={styles.taskTitle}>{nextTask.title}</Text>
 
-                <View style={styles.taskMeta}>
-                  <Text style={styles.taskMetaItem}>
-                    Duration: {nextTask.duration_minutes} min
-                  </Text>
-                  <Text style={styles.taskMetaItem}>
-                    Urgency: {nextTask.urgency_score}
-                  </Text>
-                </View>
+            <View style={styles.taskMeta}>
+              <Text style={styles.taskMetaItem}>
+                Duration: {nextTask.duration_minutes} min
+              </Text>
+              <Text style={styles.taskMetaItem}>
+                Urgency: {nextTask.urgency_score}
+              </Text>
+            </View>
 
-                {nextTask.description && (
-                  <Text style={styles.taskDescription}>{nextTask.description}</Text>
-                )}
-
-                {/* Start Button - Primary Action */}
-                <View style={styles.actionSection}>
-                  <Button
-                    title="START TASK"
-                    onPress={() => onStartTask(nextTask.id)}
-                    fullWidth
-                    disabled={isInForcedStartMode || isInLockedFocusMode}
-                  />
-                </View>
-              </Card>
-            ) : (
-              <Card style={styles.emptyCard}>
-                <EmptyState
-                  title="No active tasks"
-                  message={
-                    canAddMoreTasks
-                      ? 'Add a task to begin'
-                      : 'Daily task limit reached'
-                  }
-                />
-                {canAddMoreTasks && (
-                  <Button
-                    title="ADD TASK"
-                    onPress={onAddTask}
-                    variant="secondary"
-                    fullWidth
-                  />
-                )}
-              </Card>
+            {nextTask.description && (
+              <Text style={styles.taskDescription}>{nextTask.description}</Text>
             )}
 
-            {/* Additional Tasks Summary */}
-            {activeTasks.length > 1 && (
-              <View style={styles.summarySection}>
-                <Text style={styles.summaryText}>
-                  {activeTasks.length - 1} more task{activeTasks.length > 2 ? 's' : ''} pending
-                </Text>
-              </View>
+            {/* Start Button - Primary Action */}
+            <View style={styles.actionSection}>
+              <Button
+                title="START TASK"
+                onPress={() => onStartTask(nextTask.id)}
+                fullWidth
+                disabled={isInForcedStartMode || isInLockedFocusMode}
+              />
+            </View>
+          </Card>
+        ) : (
+          /* In work block but no tasks yet */
+          <Card style={styles.emptyCard}>
+            <EmptyState
+              title="No active tasks"
+              message={
+                canAddMoreTasks
+                  ? 'Add a task to begin your work block'
+                  : 'Daily task limit reached'
+              }
+            />
+            {canAddMoreTasks && (
+              <Button
+                title="ADD TASK"
+                onPress={onAddTask}
+                fullWidth
+              />
             )}
-          </>
+          </Card>
+        )}
+
+        {/* Additional Tasks Summary */}
+        {isWorkBlock && activeTasks.length > 1 && (
+          <View style={styles.summarySection}>
+            <Text style={styles.summaryText}>
+              {activeTasks.length - 1} more task{activeTasks.length > 2 ? 's' : ''} pending
+            </Text>
+          </View>
         )}
 
         {/* Today's Summary */}
@@ -159,11 +168,11 @@ export function HomeScreen({ onStartTask, onAddTask, onViewReview }: HomeScreenP
         )}
       </ScrollView>
 
-      {/* Bottom Actions */}
+      {/* Bottom Actions — always visible */}
       <View style={styles.bottomActions}>
-        {canAddMoreTasks && isWorkBlock && nextTask && (
+        {canAddMoreTasks && (
           <Button
-            title="ADD ANOTHER TASK"
+            title="CREATE TASK"
             onPress={onAddTask}
             variant="secondary"
             fullWidth
@@ -230,11 +239,22 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
   },
-  blockMessage: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.warning,
-    marginTop: theme.spacing.sm,
+  ctaCard: {
+    marginBottom: theme.spacing.lg,
+    alignItems: 'center',
+  },
+  ctaTitle: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
     textAlign: 'center',
+  },
+  ctaSubtitle: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.lg,
   },
   taskCard: {
     marginBottom: theme.spacing.lg,

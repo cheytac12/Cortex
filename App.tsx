@@ -34,8 +34,8 @@ import {
 } from '@/engines/TimeSkeletonEngine';
 
 
-import { Task, TaskStatus, SessionStatus, DailyBlock } from '@/types/models';
-import { format, startOfDay } from 'date-fns';
+import { Task, TaskStatus, SessionStatus, DailyBlock, DailyBlockType } from '@/types/models';
+import { format, startOfDay, addMinutes } from 'date-fns';
 
 const Stack = createNativeStackNavigator();
 
@@ -76,7 +76,6 @@ export default function App() {
     if (!isInitialized) return;
 
     const updateCurrentBlock = () => {
-      if (todaysTasks.length > 0) {
         // Get blocks from somewhere (mock for now)
         const mockBlocks: DailyBlock[] = generateDefaultDailyBlocks(
           currentUser?.id || 'mock',
@@ -90,7 +89,6 @@ export default function App() {
 
         const block = getCurrentBlock(mockBlocks);
         setCurrentBlock(block);
-      }
     };
 
     updateCurrentBlock();
@@ -192,6 +190,26 @@ export default function App() {
     } catch (error) {
       console.error('Load tasks error:', error);
     }
+  };
+
+  /**
+   * Handle user manually starting a work block
+   */
+  const handleStartWorkBlock = () => {
+    const now = new Date();
+    const startTime = format(now, 'HH:mm');
+    const endTime = format(addMinutes(now, 180), 'HH:mm'); // 3-hour block
+    const workBlock: DailyBlock = {
+      id: `manual-block-${Date.now()}-${Math.random()}`,
+      user_id: currentUser?.id || 'demo-user',
+      date: format(now, 'yyyy-MM-dd'),
+      block_type: DailyBlockType.WORK_1,
+      start_time: startTime,
+      end_time: endTime,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    };
+    setCurrentBlock(workBlock);
   };
 
   /**
@@ -354,6 +372,7 @@ export default function App() {
               <HomeScreen
                 {...props}
                 onStartTask={handleStartTask}
+                onStartWorkBlock={handleStartWorkBlock}
                 onAddTask={() => props.navigation.navigate('TaskEntry')}
                 onViewReview={() => props.navigation.navigate('Review')}
               />

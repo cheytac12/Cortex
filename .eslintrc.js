@@ -5,7 +5,9 @@ module.exports = {
   rules: {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
-    'import/no-unresolved': 'off', // Disable for React Native as it has special module resolution
-    'import/namespace': 'off', // Disable for React Native
+    // import/no-unresolved is left off because Metro/Babel handle module resolution
+    // (including the @/* alias). Use `npm run typecheck` to catch unresolved imports via TypeScript.
+    'import/no-unresolved': 'off',
+    'import/namespace': 'off',
   },
 };

@@ -24,7 +24,6 @@ import {
   initiateForcedStart,
   commitToStart,
   failSession,
-  handleAppExit,
   handleCountdownExpired,
   isCountdownExpired,
 } from './engines/ForcedStartEngine';
@@ -34,12 +33,8 @@ import {
   getCurrentBlock,
 } from './engines/TimeSkeletonEngine';
 
-import {
-  calculateWorkloadAdjustment,
-  calculateSystemConstraints,
-} from './engines/SystemRulesEngine';
 
-import { Task, TaskStatus, Session, SessionStatus, DailyBlock } from './types/models';
+import { Task, TaskStatus, SessionStatus, DailyBlock } from './types/models';
 import { format, startOfDay } from 'date-fns';
 
 const Stack = createNativeStackNavigator();
@@ -48,7 +43,6 @@ export default function App() {
   const {
     currentUser,
     setCurrentUser,
-    currentBlock,
     setCurrentBlock,
     currentTask,
     setCurrentTask,

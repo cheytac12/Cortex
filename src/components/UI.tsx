@@ -12,7 +12,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
-  TextStyle,
 } from 'react-native';
 import { theme } from '../styles/theme';
 

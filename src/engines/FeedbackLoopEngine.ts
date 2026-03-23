@@ -15,9 +15,8 @@ import {
   Task,
   SessionStatus,
   TaskStatus,
-  DailyBlockType,
 } from '../types/models';
-import { startOfWeek, format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 export interface DailySummary {
   date: string;
@@ -171,12 +170,13 @@ export function calculateWeeklyPattern(
   // Determine trend
   const trend = calculateTrend(dailyMetrics);
 
+  // Not currently used but kept for future analysis
   // Find best and worst performing days
-  const sorted = [...dailyMetrics].sort(
-    (a, b) => b.completion_rate - a.completion_rate
-  );
-  const bestDay = sorted[0]?.date;
-  const worstDay = sorted[sorted.length - 1]?.date;
+  // const sorted = [...dailyMetrics].sort(
+  //   (a, b) => b.completion_rate - a.completion_rate
+  // );
+  // const bestDay = sorted[0]?.date;
+  // const worstDay = sorted[sorted.length - 1]?.date;
 
   // Generate recommendations
   const recommendations = generateWeeklyRecommendations(

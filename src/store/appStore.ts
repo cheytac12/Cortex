@@ -10,7 +10,6 @@ import {
   Session,
   DailyBlock,
   DailyMetrics,
-  SleepLog,
   AppState,
 } from '../types/models';
 import { ForcedStartState } from '../engines/ForcedStartEngine';

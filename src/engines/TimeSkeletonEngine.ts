@@ -9,7 +9,7 @@
  */
 
 import { DailyBlock, DailyBlockType } from '../types/models';
-import { addMinutes, parse, format, isWithinInterval, parseISO } from 'date-fns';
+import { addMinutes, parse, format } from 'date-fns';
 
 interface BlockDefinition {
   type: DailyBlockType;

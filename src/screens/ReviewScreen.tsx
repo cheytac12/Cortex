@@ -19,7 +19,7 @@ interface ReviewScreenProps {
 }
 
 export function ReviewScreen({ onClose }: ReviewScreenProps) {
-  const { todaysTasks, todaysMetrics, currentUser } = useStore();
+  const { todaysTasks, todaysMetrics } = useStore();
 
   const completedTasks = selectCompletedTasks(useStore.getState());
   const failedTasks = selectFailedTasks(useStore.getState());

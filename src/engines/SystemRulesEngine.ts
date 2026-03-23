@@ -10,7 +10,7 @@
 
 import { Task, DailyMetrics, SleepLog, User, TaskStatus } from '../types/models';
 import { assessSleepImpact } from './SleepAnchorSystem';
-import { parseISO, startOfDay, isToday } from 'date-fns';
+import { parseISO } from 'date-fns';
 
 export interface SystemConstraints {
   maxDailyTasks: number;
